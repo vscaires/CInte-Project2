@@ -4,11 +4,13 @@ from deap import tools
 import random
 import pandas as pd
 
-data = pd.read_csv("CityDistCar.csv")
+data = pd.read_csv("Datasets/CityDistCar.csv")
 data = data.drop(columns=["Distances of Cities by Car (min)"])
 
 
 num_cities=20
+POPULATION = 80
+GENERATIONS = 125
 
 creator.create("FitnessMin", base.Fitness, weights=(-1.0,))
 creator.create("Individual", list, fitness=creator.FitnessMin)
@@ -19,7 +21,7 @@ toolbox.register("individual", tools.initIterate, creator.Individual, toolbox.ra
 toolbox.register("population", tools.initRepeat, list, toolbox.individual)
 
 def city_distance(individual):
-    data = pd.read_csv("CityDistCar.csv")
+    data = pd.read_csv("Datasets/CityDistCar.csv")
     data = data.drop(columns=["Distances of Cities by Car (min)"])
     
     distance = 0
@@ -34,7 +36,7 @@ def city_distance(individual):
 toolbox.register("evaluate", city_distance)
 toolbox.register("mate", tools.cxOrdered)
 toolbox.register("mutate", tools.mutShuffleIndexes, indpb=0.05)
-toolbox.register("select", tools.selTournament, tournsize=5)
+toolbox.register("select", tools.selBest)
 
 
 
@@ -43,13 +45,13 @@ def main():
 
     # create an initial population of 300 individuals (where
     # each individual is a list of integers)
-    pop = toolbox.population(n=250)
+    pop = toolbox.population(n=POPULATION)
     
     # CXPB  is the probability with which two individuals
     #       are crossed
     #
     # MUTPB is the probability for mutating an individual
-    CXPB, MUTPB = 0.5, 0.2
+    CXPB, MUTPB = 0.8, 0.2
     
     print("Start of evolution")
     
@@ -67,7 +69,7 @@ def main():
     g = 0
     
     # Begin the evolution
-    while g < 40:
+    while g < GENERATIONS:
         # A new generation
         g = g + 1
         print("-- Generation %i --" % g)
