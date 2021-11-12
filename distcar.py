@@ -11,9 +11,11 @@ data = data.drop(columns=["Distances of Cities by Car (min)"])
 positions = pd.read_csv("Datasets/CitiesXY.csv")
 positions = positions.drop(columns=["City"])
 
-NUM_CITIES = 50
+NUM_CITIES = 20
 POPULATION = 40
 GENERATIONS = 250
+
+positions.drop(positions.tail(50 - NUM_CITIES).index,inplace=True) # drop last n rows
 
 creator.create("FitnessMin", base.Fitness, weights=(-1.0,))
 creator.create("Individual", list, fitness=creator.FitnessMin)
@@ -40,7 +42,7 @@ toolbox.register("select", tools.selTournament, tournsize=3)
 
 
 def main():
-    # random.seed(64)
+    random.seed(48)
 
     # create an initial population of 300 individuals (where
     # each individual is a list of integers)
@@ -50,7 +52,7 @@ def main():
     #       are crossed
     #
     # MUTPB is the probability for mutating an individual
-    CXPB, MUTPB = 0.9, 0.1
+    CXPB, MUTPB = 0.9, 0.3
     
     print("Start of evolution")
     
@@ -67,12 +69,15 @@ def main():
     # Variable keeping track of the number of generations
     g = 0
     
+    bestGen = []
+    
     # Begin the evolution
     while g < GENERATIONS:
+
         # A new generation
         g = g + 1
         print("-- Generation %i --" % g)
-        
+
         # Select the next generation individuals
         offspring = toolbox.select(pop, len(pop))
         # Clone the selected individuals
@@ -123,6 +128,8 @@ def main():
         
         best_ind = tools.selBest(pop, 1)[0]
         print("Gen %d: best individual is %s, %s" % (g, best_ind, best_ind.fitness.values))
+        bestGen.append(best_ind.fitness.values)
+
     
     print("-- End of (successful) evolution --")
     
@@ -148,6 +155,12 @@ def main():
     #         verticalalignment='top', bbox=props)
 
     plt.tight_layout()
+    plt.show()
+
+    plt.title('Minimum Evolution')
+    plt.xlabel('Number of Generations')
+    plt.ylabel('Minimum Distance in minutes')
+    plt.plot(bestGen)
     plt.show()
 
 if __name__ == "__main__":
