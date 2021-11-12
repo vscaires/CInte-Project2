@@ -8,8 +8,8 @@ data = pd.read_csv("Datasets/CityDistCar.csv")
 data = data.drop(columns=["Distances of Cities by Car (min)"])
 
 NUM_CITIES=20
-POPULATION = 250
-GENERATIONS = 40
+POPULATION = 500
+GENERATIONS = 20
 
 creator.create("FitnessMin", base.Fitness, weights=(-1.0,))
 creator.create("Individual", list, fitness=creator.FitnessMin)
@@ -20,9 +20,6 @@ toolbox.register("individual", tools.initIterate, creator.Individual, toolbox.ra
 toolbox.register("population", tools.initRepeat, list, toolbox.individual)
 
 def city_distance(individual):
-    data = pd.read_csv("Datasets/CityDistCar.csv")
-    data = data.drop(columns=["Distances of Cities by Car (min)"])
-    
     distance = 0
     distance = data.iloc[individual[0], individual[-1]]
     
@@ -33,9 +30,9 @@ def city_distance(individual):
 
 
 toolbox.register("evaluate", city_distance)
-toolbox.register("mate", tools.cxUniform, indpb = 0.2)
-toolbox.register("mutate", tools.mutShuffleIndexes, indpb=0.05)
-toolbox.register("select", tools.selTournament, tournsize=10)
+toolbox.register("mate", tools.cxTwoPoint)
+toolbox.register("mutate", tools.mutShuffleIndexes, indpb= 1/NUM_CITIES)
+toolbox.register("select", tools.selTournament, tournsize=15)
 
 
 def main():
@@ -49,7 +46,7 @@ def main():
     #       are crossed
     #
     # MUTPB is the probability for mutating an individual
-    CXPB, MUTPB = 0.6, 0.2
+    CXPB, MUTPB = 0.9, 0.3
     
     print("Start of evolution")
     
