@@ -3,13 +3,21 @@ from deap import creator
 from deap import tools
 import random
 import pandas as pd
+import numpy as np
+import matplotlib.pyplot as plt
 
 data = pd.read_csv("Datasets/CityDistPlane.csv")
 data = data.drop(columns=["Distances of Cities by Flight (in min)"])
 
+positions = pd.read_csv("Datasets/CitiesXY.csv")
+positions = positions.drop(columns=["City"])
+
+
 NUM_CITIES = 20
 POPULATION = 40
 GENERATIONS = 250
+
+positions.drop(positions.tail(50 - NUM_CITIES).index,inplace=True) # drop last n rows
 
 creator.create("FitnessMin", base.Fitness, weights=(-1.0,))
 creator.create("Individual", list, fitness=creator.FitnessMin)
@@ -36,7 +44,7 @@ toolbox.register("select", tools.selTournament, tournsize=5)
 
 
 def main():
-    random.seed(64)
+    # random.seed(64)
 
     # create an initial population of 300 individuals (where
     # each individual is a list of integers)
@@ -46,8 +54,8 @@ def main():
     #       are crossed
     #
     # MUTPB is the probability for mutating an individual
-    CXPB, MUTPB = 0.9, 0.3
-    
+    CXPB, MUTPB = 0.8, 0.2
+
     print("Start of evolution")
     
     # Evaluate the entire population
@@ -125,5 +133,28 @@ def main():
     best_ind = tools.selBest(pop, 1)[0]
     print("Best individual is %s, %s" % (best_ind, best_ind.fitness.values))
 
+
+    plt.title('Optimized tour')
+
+    plt.scatter(positions["x"], positions["y"])
+
+    for i in range(0,NUM_CITIES-1):
+        start_pos = best_ind[i]
+        end_pos = best_ind[i+1]
+        plt.annotate("", xy=(positions.iloc[start_pos]["x"], positions.iloc[start_pos]["y"]), xytext=(positions.iloc[end_pos]["x"], positions.iloc[end_pos]["y"]), arrowprops=dict(arrowstyle="->"))
+    
+    start_pos = best_ind[NUM_CITIES-1]
+    end_pos = best_ind[0]
+    plt.annotate("", xy=(positions.iloc[start_pos]["x"], positions.iloc[start_pos]["y"]), xytext=(positions.iloc[end_pos]["x"], positions.iloc[end_pos]["y"]), arrowprops=dict(arrowstyle="->"))
+
+    # textstr = "N nodes: %d\nTotal length: %s" % (NUM_CITIES, best_ind.fitness.values)
+    # props = dict(boxstyle='round', facecolor='wheat', alpha=0.5)
+    # plt.text(0.05, 0.95, textstr, transform=plt.transAxes, fontsize=14, # Textbox
+    #         verticalalignment='top', bbox=props)
+
+    plt.tight_layout()
+    plt.show()
+
+    
 if __name__ == "__main__":
     main()
