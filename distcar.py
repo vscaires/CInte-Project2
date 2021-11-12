@@ -8,8 +8,8 @@ data = pd.read_csv("Datasets/CityDistCar.csv")
 data = data.drop(columns=["Distances of Cities by Car (min)"])
 
 NUM_CITIES=20
-POPULATION = 500
-GENERATIONS = 20
+POPULATION = 1000
+GENERATIONS = 10
 
 creator.create("FitnessMin", base.Fitness, weights=(-1.0,))
 creator.create("Individual", list, fitness=creator.FitnessMin)
@@ -32,7 +32,7 @@ def city_distance(individual):
 toolbox.register("evaluate", city_distance)
 toolbox.register("mate", tools.cxTwoPoint)
 toolbox.register("mutate", tools.mutShuffleIndexes, indpb= 1/NUM_CITIES)
-toolbox.register("select", tools.selTournament, tournsize=15)
+toolbox.register("select", tools.selTournament, tournsize=25)
 
 
 def main():
