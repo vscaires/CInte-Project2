@@ -3,7 +3,6 @@ from deap import creator
 from deap import tools
 import random
 import pandas as pd
-import numpy as np
 import matplotlib.pyplot as plt
 
 data = pd.read_csv("Datasets/CityDistPlane.csv")
@@ -40,11 +39,11 @@ def city_distance(individual):
 toolbox.register("evaluate", city_distance)
 toolbox.register("mate", tools.cxOrdered)
 toolbox.register("mutate", tools.mutShuffleIndexes, indpb=1/NUM_CITIES)
-toolbox.register("select", tools.selTournament, tournsize=5)
+toolbox.register("select", tools.selTournament, tournsize=3)
 
 
 def main():
-    # random.seed(64)
+    random.seed(58)
 
     # create an initial population of 300 individuals (where
     # each individual is a list of integers)
@@ -54,7 +53,7 @@ def main():
     #       are crossed
     #
     # MUTPB is the probability for mutating an individual
-    CXPB, MUTPB = 0.8, 0.2
+    CXPB, MUTPB = 0.9, 0.3
 
     print("Start of evolution")
     

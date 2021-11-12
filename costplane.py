@@ -16,6 +16,8 @@ NUM_CITIES = 20
 POPULATION = 40
 GENERATIONS = 250
 
+positions.drop(positions.tail(50 - NUM_CITIES).index,inplace=True) # drop last n rows
+
 creator.create("FitnessMin", base.Fitness, weights=(-1.0,))
 creator.create("Individual", list, fitness=creator.FitnessMin)
 

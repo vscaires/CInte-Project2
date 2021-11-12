@@ -3,7 +3,7 @@ from deap import creator
 from deap import tools
 import random
 import pandas as pd
-import matplotlib as plt
+import matplotlib.pyplot as plt
 
 data = pd.read_csv("Datasets/CityCostCar.csv")
 data = data.drop(columns=["Cost of Cities by Car (€)"])
@@ -14,6 +14,8 @@ positions = positions.drop(columns=["City"])
 NUM_CITIES = 20
 POPULATION = 40
 GENERATIONS = 250
+
+positions.drop(positions.tail(50 - NUM_CITIES).index,inplace=True) # drop last n rows
 
 creator.create("FitnessMin", base.Fitness, weights=(-1.0,))
 creator.create("Individual", list, fitness=creator.FitnessMin)
