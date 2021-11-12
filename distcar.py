@@ -7,7 +7,7 @@ import pandas as pd
 data = pd.read_csv("Datasets/CityDistCar.csv")
 data = data.drop(columns=["Distances of Cities by Car (min)"])
 
-NUM_CITIES=20
+NUM_CITIES = 20
 POPULATION = 1000
 GENERATIONS = 10
 
@@ -30,7 +30,7 @@ def city_distance(individual):
 
 
 toolbox.register("evaluate", city_distance)
-toolbox.register("mate", tools.cxTwoPoint)
+toolbox.register("mate", tools.cxOrdered)
 toolbox.register("mutate", tools.mutShuffleIndexes, indpb= 1/NUM_CITIES)
 toolbox.register("select", tools.selTournament, tournsize=25)
 
@@ -46,7 +46,7 @@ def main():
     #       are crossed
     #
     # MUTPB is the probability for mutating an individual
-    CXPB, MUTPB = 0.9, 0.3
+    CXPB, MUTPB = 0.9, 0.1
     
     print("Start of evolution")
     
