@@ -4,18 +4,89 @@ from deap import tools
 import random
 import pandas as pd
 import matplotlib.pyplot as plt
+import numpy as np
 
-data = pd.read_csv("Datasets/CityDistPlane.csv")
-data = data.drop(columns=["Distances of Cities by Flight (in min)"])
+NUM_CITIES = 20
+POPULATION = 40
+GENERATIONS = 250
+MAX_RUNS = 1
+SEED = 3
+CXPB = 0.9
+MUTPB = 0.3
+
+print("***********************************************")
+print("*--- Single-Objective Optimization Problem ---*")
+print("*    Choose One :                             *")
+print("*         1 - Car Distances                   *")
+print("*         2 - Car Costs                       *")
+print("*         3 - Plane Distances                 *")
+print("*         4 - Plane Costs                     *")
+print("*                                             *")
+print("*         0 - EXIT                            *")
+print("***********************************************")
+status = input()
+while True:
+    if status == '1':
+        data = pd.read_csv("Datasets/CityDistCar.csv")
+        data = data.drop(columns=["Distances of Cities by Car (min)"])
+        break
+    if status == '2':
+        data = pd.read_csv("Datasets/CityCostCar.csv")
+        data = data.drop(columns=["Cost of Cities by Car (€)"])
+        break
+    if status == '3':
+        data = pd.read_csv("Datasets/CityDistPlane.csv")
+        data = data.drop(columns=["Distances of Cities by Flight (in min)"])
+        break
+    if status == '4':
+        data = pd.read_csv("Datasets/CityCostPlane.csv")
+        data = data.drop(columns=["Cost of Cities by Flight (€)"])
+        break
+    if status == '0':
+        quit()
+    status = input()
+
+print("***********************************************")
+print("*--- Single-Objective Optimization Problem ---*")
+print("*    Choose One :                             *")
+print("*         1 - Normal                          *")
+print("*         2 - Heuristic                       *")
+print("***********************************************")
+mode = input()
+while True :
+    if mode == '1':
+        break
+    if mode == '2':
+        break
+    print("Entry not Valid, try again!")
+    mode = input()
 
 positions = pd.read_csv("Datasets/CitiesXY.csv")
 positions = positions.drop(columns=["City"])
 
 
-NUM_CITIES = 20
-POPULATION = 40
-GENERATIONS = 250
-MAX_RUNS = 30
+def heuristic():
+    
+    positions = pd.read_csv("Datasets/CitiesXY.csv")
+    positions = positions.drop(columns=["City"])
+
+    for i in range(NUM_CITIES, 50):
+        positions = positions.drop([i])
+    
+    data_left = positions.where(positions['x']<500)
+    data_right = positions.where(positions['x']>500)
+    
+    data_left = data_left.dropna()
+    data_right = data_right.dropna()
+    
+    data_left = data_left.sort_values(by='y')
+    data_right = data_right.sort_values(by='y', ascending=False)
+    
+    data_heur = data_left.append(data_right)
+    
+    heuristic = data_heur.index.values.tolist()
+            
+    return heuristic
 
 positions.drop(positions.tail(50 - NUM_CITIES).index,inplace=True) # drop last n rows
 
@@ -39,15 +110,17 @@ def city_distance(individual):
 
 toolbox.register("evaluate", city_distance)
 toolbox.register("mate", tools.cxOrdered)
-toolbox.register("mutate", tools.mutShuffleIndexes, indpb=1/NUM_CITIES)
+toolbox.register("mutate", tools.mutShuffleIndexes, indpb= 1/NUM_CITIES)
 toolbox.register("select", tools.selTournament, tournsize=3)
 
 
 def main():
 
-    overall_mean = 0
-    overall_std = 0
-    for rnd in range(1, MAX_RUNS):
+    overall = []
+    seed = 40
+    shortest = 100000
+
+    for rnd in range(0, MAX_RUNS):
         random.seed(rnd)
 
         print("-- RUN %i --" % rnd)
@@ -55,12 +128,10 @@ def main():
         # create an initial population of 300 individuals (where
         # each individual is a list of integers)
         pop = toolbox.population(n=POPULATION)
-        
-        # CXPB  is the probability with which two individuals
-        #       are crossed
-        #
-        # MUTPB is the probability for mutating an individual
-        CXPB, MUTPB = 0.9, 0.3
+
+        if(mode == '2'):
+            pop[POPULATION-1]=creator.Individual(heuristic())
+
         
         print("Start of evolution")
         
@@ -79,12 +150,13 @@ def main():
         
         bestGen = []
         
+        
         # Begin the evolution
         while g < GENERATIONS:
 
             # A new generation
             g = g + 1
-            print("-- Generation %i, Run %i--" % (g, rnd))
+            print("-- Generation %i, Run %i --" % (g, rnd))
 
             # Select the next generation individuals
             offspring = toolbox.select(pop, len(pop))
@@ -138,18 +210,21 @@ def main():
             print("Gen %d: best individual is %s, %s" % (g, best_ind, best_ind.fitness.values))
             bestGen.append(best_ind.fitness.values)
 
+            if shortest > best_ind.fitness.values[0]:
+                seed = rnd
+                shortest = best_ind.fitness.values[0]
+                
+
         
         print("-- End of (successful) evolution --")
         
         best_ind = tools.selBest(pop, 1)[0]
         print("Best individual is %s, %s" % (best_ind, best_ind.fitness.values))
-        overall_mean += mean
-        overall_std += std
+        overall.append(best_ind.fitness.values[0])
 
-    overall_mean = overall_mean/MAX_RUNS
-    overall_std = overall_std/MAX_RUNS
 
-    print("MEAN = %i STD = %i" % (overall_mean, overall_std))
+    print("MEAN = %i STD = %i" % (np.mean(overall), np.std(overall)))
+    print("SEED %i %i" % (seed, shortest))
     
     plt.title('Optimized tour')
 
@@ -158,11 +233,11 @@ def main():
     for i in range(0,NUM_CITIES-1):
         start_pos = best_ind[i]
         end_pos = best_ind[i+1]
-        plt.annotate("", xy=(positions.iloc[start_pos]["x"], positions.iloc[start_pos]["y"]), xytext=(positions.iloc[end_pos]["x"], positions.iloc[end_pos]["y"]), arrowprops=dict(arrowstyle="->"))
+        plt.annotate("", xy=(positions.iloc[end_pos]["x"], positions.iloc[end_pos]["y"]), xytext=(positions.iloc[start_pos]["x"], positions.iloc[start_pos]["y"]), arrowprops=dict(arrowstyle="->", color='r'))
     
     start_pos = best_ind[NUM_CITIES-1]
     end_pos = best_ind[0]
-    plt.annotate("", xy=(positions.iloc[start_pos]["x"], positions.iloc[start_pos]["y"]), xytext=(positions.iloc[end_pos]["x"], positions.iloc[end_pos]["y"]), arrowprops=dict(arrowstyle="->"))
+    plt.annotate("", xy=(positions.iloc[end_pos]["x"], positions.iloc[end_pos]["y"]), xytext=(positions.iloc[start_pos]["x"], positions.iloc[start_pos]["y"]), arrowprops=dict(arrowstyle="->", color='b'))
 
     # textstr = "N nodes: %d\nTotal length: %s" % (NUM_CITIES, best_ind.fitness.values)
     # props = dict(boxstyle='round', facecolor='wheat', alpha=0.5)
