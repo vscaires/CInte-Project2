@@ -131,6 +131,7 @@ toolbox.register("rand_city", random.sample, range(num_cities), num_cities)
 toolbox.register("individual", tools.initIterate, creator.Individual, toolbox.rand_city)
 toolbox.register("population", tools.initRepeat, list, toolbox.individual)
 
+#Initializes our individual by initializing the distances/costs with the values in the dataset
 def city_distance(individual):
     distance = 0
     distance = data.iloc[individual[0], individual[-1]]
@@ -142,7 +143,9 @@ def city_distance(individual):
 
 
 toolbox.register("evaluate", city_distance)
+# We chose the Ordered Crossover since it makes the new individual without repeating cities
 toolbox.register("mate", tools.cxOrdered)
+# By shuffling indexes we make sure that every city only appears once
 toolbox.register("mutate", tools.mutShuffleIndexes, indpb= 1/num_cities)
 toolbox.register("select", tools.selTournament, tournsize=3)
 
@@ -154,7 +157,7 @@ def main():
     shortest = 100000
 
     for rnd in range(0, MAX_RUNS):
-        random.seed(9)
+        random.seed(rnd)
 
         print("-- RUN %i --" % rnd)
 
@@ -266,16 +269,11 @@ def main():
     for i in range(0,num_cities-1):
         start_pos = best_ind[i]
         end_pos = best_ind[i+1]
-        plt.annotate("", xy=(positions.iloc[end_pos]["x"], positions.iloc[end_pos]["y"]), xytext=(positions.iloc[start_pos]["x"], positions.iloc[start_pos]["y"]), arrowprops=dict(arrowstyle="->", color='r'))
+        plt.annotate("", xy=(positions.iloc[end_pos]["x"], positions.iloc[end_pos]["y"]), xytext=(positions.iloc[start_pos]["x"], positions.iloc[start_pos]["y"]), arrowprops=dict(arrowstyle="->"))
     
     start_pos = best_ind[num_cities-1]
     end_pos = best_ind[0]
-    plt.annotate("", xy=(positions.iloc[end_pos]["x"], positions.iloc[end_pos]["y"]), xytext=(positions.iloc[start_pos]["x"], positions.iloc[start_pos]["y"]), arrowprops=dict(arrowstyle="->", color='b'))
-
-    # textstr = "N nodes: %d\nTotal length: %s" % (num_cities, best_ind.fitness.values)
-    # props = dict(boxstyle='round', facecolor='wheat', alpha=0.5)
-    # plt.text(0.05, 0.95, textstr, transform=plt.transAxes, fontsize=14, # Textbox
-    #         verticalalignment='top', bbox=props)
+    plt.annotate("", xy=(positions.iloc[end_pos]["x"], positions.iloc[end_pos]["y"]), xytext=(positions.iloc[start_pos]["x"], positions.iloc[start_pos]["y"]), arrowprops=dict(arrowstyle="->"))
 
     plt.tight_layout()
     plt.show()
