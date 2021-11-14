@@ -6,14 +6,20 @@ import pandas as pd
 import matplotlib.pyplot as plt
 import numpy as np
 
-NUM_CITIES = 20
+## Declaration of Constants
+# POPULATION - Number of genes in population
+# GENERATIONS - Number of generations
+# MAX_RUNS - Number of runs with different random seeds
+# CXPB - is the probability with which two individuals are crossed
+# MUTPB - is the probability for mutating an individual
+##
 POPULATION = 40
 GENERATIONS = 250
 MAX_RUNS = 1
-SEED = 3
 CXPB = 0.9
 MUTPB = 0.3
 
+## Terminal UI to choose between the different datasets
 print("***********************************************")
 print("*--- Single-Objective Optimization Problem ---*")
 print("*    Choose One :                             *")
@@ -46,6 +52,30 @@ while True:
         quit()
     status = input()
 
+## Terminal UI to choose between the number of cities to run
+print("***********************************************")
+print("*--- Single-Objective Optimization Problem ---*")
+print("*    Number of Cities :                       *")
+print("*         1 - 20                              *")
+print("*         2 - 30                              *")
+print("*         3 - 50                              *")
+print("***********************************************")
+num_cities = 20
+mode = input()
+while True :
+    if mode == '1':
+        num_cities = 20
+        break
+    if mode == '2':
+        num_cities = 30
+        break
+    if mode == '3':
+        num_cities = 50
+        break
+    print("Entry not Valid, try again!")
+    mode = input()
+
+## Terminal UI to choose if it is to use with Heuristics or not
 print("***********************************************")
 print("*--- Single-Objective Optimization Problem ---*")
 print("*    Choose One :                             *")
@@ -61,16 +91,21 @@ while True :
     print("Entry not Valid, try again!")
     mode = input()
 
+## Read the dataset CitiesXY.csv and store it in positions variable 
 positions = pd.read_csv("Datasets/CitiesXY.csv")
 positions = positions.drop(columns=["City"])
+## Filter the number of cities to be used with the Algorithm
+positions.drop(positions.tail(50 - num_cities).index,inplace=True) # drop last n rows
 
-
+## Heuristic function
+#
+#
 def heuristic():
     
     positions = pd.read_csv("Datasets/CitiesXY.csv")
     positions = positions.drop(columns=["City"])
 
-    for i in range(NUM_CITIES, 50):
+    for i in range(num_cities, 50):
         positions = positions.drop([i])
     
     data_left = positions.where(positions['x']<500)
@@ -88,13 +123,11 @@ def heuristic():
             
     return heuristic
 
-positions.drop(positions.tail(50 - NUM_CITIES).index,inplace=True) # drop last n rows
-
 creator.create("FitnessMin", base.Fitness, weights=(-1.0,))
 creator.create("Individual", list, fitness=creator.FitnessMin)
 
 toolbox = base.Toolbox()
-toolbox.register("rand_city", random.sample, range(NUM_CITIES), NUM_CITIES)
+toolbox.register("rand_city", random.sample, range(num_cities), num_cities)
 toolbox.register("individual", tools.initIterate, creator.Individual, toolbox.rand_city)
 toolbox.register("population", tools.initRepeat, list, toolbox.individual)
 
@@ -102,7 +135,7 @@ def city_distance(individual):
     distance = 0
     distance = data.iloc[individual[0], individual[-1]]
     
-    for i in range(NUM_CITIES - 1):
+    for i in range(num_cities - 1):
         distance += data.iloc[individual[i], individual[i+1]]
     
     return distance,
@@ -110,7 +143,7 @@ def city_distance(individual):
 
 toolbox.register("evaluate", city_distance)
 toolbox.register("mate", tools.cxOrdered)
-toolbox.register("mutate", tools.mutShuffleIndexes, indpb= 1/NUM_CITIES)
+toolbox.register("mutate", tools.mutShuffleIndexes, indpb= 1/num_cities)
 toolbox.register("select", tools.selTournament, tournsize=3)
 
 
@@ -121,7 +154,7 @@ def main():
     shortest = 100000
 
     for rnd in range(0, MAX_RUNS):
-        random.seed(rnd)
+        random.seed(9)
 
         print("-- RUN %i --" % rnd)
 
@@ -230,16 +263,16 @@ def main():
 
     plt.scatter(positions["x"], positions["y"])
 
-    for i in range(0,NUM_CITIES-1):
+    for i in range(0,num_cities-1):
         start_pos = best_ind[i]
         end_pos = best_ind[i+1]
         plt.annotate("", xy=(positions.iloc[end_pos]["x"], positions.iloc[end_pos]["y"]), xytext=(positions.iloc[start_pos]["x"], positions.iloc[start_pos]["y"]), arrowprops=dict(arrowstyle="->", color='r'))
     
-    start_pos = best_ind[NUM_CITIES-1]
+    start_pos = best_ind[num_cities-1]
     end_pos = best_ind[0]
     plt.annotate("", xy=(positions.iloc[end_pos]["x"], positions.iloc[end_pos]["y"]), xytext=(positions.iloc[start_pos]["x"], positions.iloc[start_pos]["y"]), arrowprops=dict(arrowstyle="->", color='b'))
 
-    # textstr = "N nodes: %d\nTotal length: %s" % (NUM_CITIES, best_ind.fitness.values)
+    # textstr = "N nodes: %d\nTotal length: %s" % (num_cities, best_ind.fitness.values)
     # props = dict(boxstyle='round', facecolor='wheat', alpha=0.5)
     # plt.text(0.05, 0.95, textstr, transform=plt.transAxes, fontsize=14, # Textbox
     #         verticalalignment='top', bbox=props)
@@ -249,7 +282,7 @@ def main():
 
     plt.title('Minimum Evolution')
     plt.xlabel('Number of Generations')
-    plt.ylabel('Minimum Distance in minutes')
+    plt.ylabel('Minimum Cost in euros')
     plt.plot(bestGen)
     plt.show()
 
